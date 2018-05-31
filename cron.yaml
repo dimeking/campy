@@ -1,7 +1,7 @@
 cron:
 - description: "Campy Daily"
   url: /
-  schedule: every 12 hours 06:00
+  schedule: every 12 hours from 06:00 to 18:00 
   retry_parameters:
     min_backoff_seconds: 60
     max_doublings: 3
