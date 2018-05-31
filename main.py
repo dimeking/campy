@@ -122,7 +122,7 @@ def index():
     for park in parks:
         park['dates'] = []
         # search for saturdays for 6 months
-        search_dates = getSearchDates(4, 13)
+        search_dates = getSearchDates(5, 13)
         for search_date in search_dates:
             print "search date: ", search_date
 
