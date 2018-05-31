@@ -35,7 +35,7 @@ if 'MONKEY_PATCH' in os.environ:
 
 app = flask.Flask(__name__)
 
-PARKS = [{'id':'72393', 'name':'Pt.Reyes'}]
+PARKS = [{'id':'72393', 'name':'Pt. Reyes'}]
 SITE_URL = 'https://www.recreation.gov'
 CODE_PARAM = '&contractCode=NRSO'
 
@@ -115,9 +115,13 @@ The Campy Team
 
 @app.route('/')
 def index():
+
+    parks = PARKS
+    
     # search in all parks
-    for park in PARKS:
-        # search for saturdays for 4 month
+    for park in parks:
+        park['dates'] = []
+        # search for saturdays for 6 months
         search_dates = getSearchDates(4, 13)
         for search_date in search_dates:
             print "search date: ", search_date
@@ -135,11 +139,12 @@ def index():
 
             if search_date in available_dates:
                 print "Eureka: ", search_date
-                send_approved_mail('{}@appspot.gserviceaccount.com'.format(
-                    app_identity.get_application_id()), park['name'], url, search_date)
+                park["dates"].append({'date': search_date, 'url': url})
+                # send_approved_mail('{}@appspot.gserviceaccount.com'.format(
+                #     app_identity.get_application_id()), park['name'], url, search_date)
 
 
-    return flask.redirect(SITE_URL)
+    return flask.jsonify(parks)
 
 
 @app.errorhandler(500)
