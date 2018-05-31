@@ -40,7 +40,7 @@ SITE_URL = 'https://www.recreation.gov'
 CODE_PARAM = '&contractCode=NRSO'
 
 def getNextDate(dayofweek):
-    # next fri while (Mon-Sun: 0-6)
+    # next fri/sat while (Mon-Sun: 0-6)
     today = date.today()
     that_day = today + timedelta( (dayofweek-today.weekday()) % 7 )
     return that_day
@@ -50,7 +50,7 @@ def getSearchDates(dayofweek, fortnights):
     next_date = None
 
     for i in range(fortnights):
-        next_date = next_date + timedelta(14) if next_date else getNextDate(dayofweek)
+        next_date = (next_date + timedelta(14)) if next_date else getNextDate(dayofweek)
         search_dates.append(next_date.strftime('%m/%d/%Y'))
         
     return search_dates
@@ -88,37 +88,37 @@ def search(response_text):
             continue
         e_idx = e_idx + len(e_dt_str) - 1
 
-        date = response_text[idx:e_idx]
-        m, d, y = date.split('/')
-        dt = date(2018,5,30).strftime('%m/%d/%Y')
-        print "available date: ", dt
+        date_str = response_text[idx:e_idx]
+        m, d, y = date_str.split('/')
+        dt = date(int(y),int(m),int(d)).strftime('%m/%d/%Y')
+        # print "available date: ", dt
         available_dates.append(dt)
 
     return available_dates
 
-def send_approved_mail(sender_address, name, url):
+def send_approved_mail(sender_address, name, url, search_date):
     print "goto url: ", url
 
     # [START send_mail]
     mail.send_mail(sender=sender_address,
                    to="Hari Raja <raja_hh@hotmail.com>",
-                   subject="Checkout campgrounds at {}.".format(name),
+                   subject="Checkout campgrounds at {} on {}.".format(name, search_date),
                    body="""Hari Raja,
 
-Checkout {} campgrounds at {}.
+Checkout {} campgrounds at {} on {}.
 
 Please let us know if you have any questions.
 
 The Campy Team
-""".format(name, url))
+""".format(name, url, search_date))
     # [END send_mail]
 
 @app.route('/')
 def index():
     # search in all parks
     for park in PARKS:
-        # search for fridays for 2 month
-        search_dates = getSearchDates(4, 4)
+        # search for saturdays for 4 month
+        search_dates = getSearchDates(4, 13)
         for search_date in search_dates:
             print "search date: ", search_date
 
@@ -135,8 +135,8 @@ def index():
 
             if search_date in available_dates:
                 print "Eureka: ", search_date
-                # send_approved_mail('{}@appspot.gserviceaccount.com'.format(
-                #     app_identity.get_application_id()), park['name'], url)
+                send_approved_mail('{}@appspot.gserviceaccount.com'.format(
+                    app_identity.get_application_id()), park['name'], url, search_date)
 
 
     return flask.redirect(SITE_URL)
