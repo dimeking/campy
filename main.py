@@ -15,8 +15,10 @@
 # [START app]
 import logging
 import os
+import json
 
 import flask
+from flask import request
 
 # [START imports]
 from datetime import datetime, timedelta, date
@@ -35,7 +37,7 @@ if 'MONKEY_PATCH' in os.environ:
 
 app = flask.Flask(__name__)
 
-PARKS = [{'id':'72393', 'name':'Pt. Reyes'}]
+PARKS = [{'id':'72393', 'name':'Point Reyes NSS'}, {'id':'70926', 'name':'TUOLUMNE MEADOWS, Yosemite NP'}, {'id':'70980', 'name':'Scorpion, Santa Cruz Island, Channel Islands NP'} ]
 SITE_URL = 'https://www.recreation.gov'
 CODE_PARAM = '&contractCode=NRSO'
 
@@ -113,16 +115,22 @@ The Campy Team
 """.format(name, url, search_date))
     # [END send_mail]
 
+def dayofweek(day):
+    daysofweek = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
+    return daysofweek[day] if day in daysofweek else 5 # Sat
+
 @app.route('/')
 def index():
 
-    parks = PARKS
+    day = request.args.get('dayofweek') if 'dayofweek' in request.args else None
+    days = request.args.get('days') if 'days' in request.args else None
     
+    parks = PARKS
     # search in all parks
     for park in parks:
         park['dates'] = []
         # search for saturdays for 6 months
-        search_dates = getSearchDates(5, 13)
+        search_dates = getSearchDates(dayofweek(day), 13)
         for search_date in search_dates:
             print "search date: ", search_date
 
