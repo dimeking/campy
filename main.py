@@ -47,12 +47,12 @@ def getNextDate(dayofweek):
     that_day = today + timedelta( (dayofweek-today.weekday()) % 7 )
     return that_day
 
-def getSearchDates(dayofweek, fortnights):
+def getSearchDates(dayofweek, weeks):
     search_dates = []
     next_date = None
 
-    for i in range(fortnights):
-        next_date = (next_date + timedelta(14)) if next_date else getNextDate(dayofweek)
+    for i in range(weeks):
+        next_date = (next_date + timedelta(7)) if next_date else getNextDate(dayofweek)
         search_dates.append(next_date.strftime('%m/%d/%Y'))
         
     return search_dates
@@ -126,11 +126,14 @@ def index():
     days = request.args.get('days') if 'days' in request.args else None
     
     parks = PARKS
+    # search for saturdays for 6 months
+    search_dates = getSearchDates(dayofweek(day), 26)
+
     # search in all parks
     for park in parks:
-        park['dates'] = []
-        # search for saturdays for 6 months
-        search_dates = getSearchDates(dayofweek(day), 13)
+        park['available dates'] = []
+        # park['search dates'] = search_dates
+        
         for search_date in search_dates:
             print "search date: ", search_date
 
@@ -147,7 +150,7 @@ def index():
 
             if search_date in available_dates:
                 print "Eureka: ", search_date
-                park["dates"].append({'date': search_date, 'url': url})
+                park["available dates"].append({'date': search_date, 'url': url})
                 # send_approved_mail('{}@appspot.gserviceaccount.com'.format(
                 #     app_identity.get_application_id()), park['name'], url, search_date)
 
