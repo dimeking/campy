@@ -40,6 +40,9 @@ app = flask.Flask(__name__)
 PARKS = [
     {'id':'72393', 'name':'Point Reyes NSS'}, 
     {'id':'70926', 'name':'TUOLUMNE MEADOWS, Yosemite NP'}, 
+    {'id':'70925', 'name':'UPPER PINES, Yosemite NP'}, 
+    {'id':'70928', 'name':'LOWER PINES, Yosemite NP'}, 
+    {'id':'70927', 'name':'NORTH PINES, Yosemite NP'}, 
     {'id':'70980', 'name':'Scorpion, Santa Cruz Island, Channel Islands NP'},
     {'id':'73984', 'name':'Pinnacles NP'}, 
      ]
@@ -140,9 +143,10 @@ def index():
     for park in parks:
         park['available dates'] = []
         # park['search dates'] = search_dates
+        print "park name: ", park['name']
         
         for search_date in search_dates:
-            print "search date: ", search_date
+            # print "search date: ", search_date
 
             url = getCalendarURL(park['id'], search_date)
     
