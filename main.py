@@ -37,7 +37,12 @@ if 'MONKEY_PATCH' in os.environ:
 
 app = flask.Flask(__name__)
 
-PARKS = [{'id':'72393', 'name':'Point Reyes NSS'}, {'id':'70926', 'name':'TUOLUMNE MEADOWS, Yosemite NP'}, {'id':'70980', 'name':'Scorpion, Santa Cruz Island, Channel Islands NP'} ]
+PARKS = [
+    {'id':'72393', 'name':'Point Reyes NSS'}, 
+    {'id':'70926', 'name':'TUOLUMNE MEADOWS, Yosemite NP'}, 
+    {'id':'70980', 'name':'Scorpion, Santa Cruz Island, Channel Islands NP'},
+    {'id':'73984', 'name':'Pinnacles NP'}, 
+     ]
 SITE_URL = 'https://www.recreation.gov'
 CODE_PARAM = '&contractCode=NRSO'
 
@@ -72,7 +77,9 @@ def search(response_text):
     available_dates = []
     idx = 0
     while True:
-        av_str = "<td class='status a' >"
+        av_str = "<td class='status a"
+        # av_sat_str = "<td class='status a sat' >"
+        # av_sun_str = "<td class='status a sun' >"
         idx = response_text.find(av_str, idx)
         if idx < 0:
             break
