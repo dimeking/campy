@@ -18,7 +18,7 @@ import os
 import json
 
 import flask
-from flask import request
+from flask import request, render_template
 
 # [START imports]
 from datetime import datetime, timedelta, date
@@ -169,6 +169,30 @@ def index():
 
     return flask.jsonify(parks)
 
+# [START form]
+@app.route('/form')
+def form():
+    return render_template('form.html')
+# [END form]
+
+
+# [START submitted]
+@app.route('/submitted', methods=['POST'])
+def submitted_form():
+    name = request.form['name']
+    email = request.form['email']
+    camp = request.form['camp_url']
+    frequency = request.form['frequency']
+
+    # [END submitted]
+    # [START render_template]
+    return render_template(
+        'submitted_form.html',
+        name=name,
+        email=email,
+        camp=camp,
+        frequency=frequency)
+    # [END render_template]
 
 @app.errorhandler(500)
 def server_error(e):

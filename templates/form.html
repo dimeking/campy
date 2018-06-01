@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <title>Campy</title>
+   <link rel="stylesheet" type="text/css" href="/static/style.css">
+  </head>
+  <body>
+    <div id="container">
+      <div class="pagetitle">
+        <h1>Campy</h1>
+        <h3>Campground Alerts</h3>
+      </div>
+      <div id="main">
+        <form method="post" action="{{ url_for('submitted_form') }}">
+          <label for="site_url">Campground URL:</label>
+          <input type="url" name="camp_url"><br /><br />
+          <label for="name">Name (Last, First):</label>
+          <input type="text" name="name"><br /><br />
+          <label for="email">Email address:</label>
+          <input type="email" name="email"><br /><br />
+          <label for="frequency">Frequency:</label>
+          <select name="frequency">
+            <option>Daily</option>
+            <option selected="yes">Weekly</option>
+            <option>Monthly</option>
+            <option>Never</option>
+          </select><br /><br />          
+          <input type="submit" value="Subscribe">
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
