@@ -43,6 +43,7 @@ PARKS = [
     {'id':'70925', 'name':'UPPER PINES, Yosemite NP'}, 
     {'id':'70928', 'name':'LOWER PINES, Yosemite NP'}, 
     {'id':'70927', 'name':'NORTH PINES, Yosemite NP'}, 
+    {'id':'71531', 'name':'FALLEN LEAF, Lake Tahoe'}, 
     {'id':'70980', 'name':'Scorpion, Santa Cruz Island, Channel Islands NP'},
     {'id':'73984', 'name':'Pinnacles NP'}, 
      ]
