@@ -17,13 +17,21 @@
           <input type="text" name="name"><br /><br />
           <label for="email">Email address:</label>
           <input type="email" name="email"><br /><br />
+          
           <label for="frequency">Frequency:</label>
           <select name="frequency">
             <option>Daily</option>
             <option selected="yes">Weekly</option>
             <option>Monthly</option>
             <option>Never</option>
-          </select><br /><br />          
+          </select><br /><br />    
+
+          <label for="alerts">Enable Alerts?</label>
+          <input type="radio" id="alertChoiceYes" name="alerts" value="Yes">
+          <label for="alertChoice1">Yes</label>
+          <input type="radio" id="alertChoiceNo" name="alerts" value="No" checked>
+          <label for="alertChoice2">No</label><br /><br />
+
           <input type="submit" value="Subscribe">
         </form>
       </div>

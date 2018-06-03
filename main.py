@@ -183,6 +183,7 @@ def submitted_form():
     email = request.form['email']
     camp = request.form['camp_url']
     frequency = request.form['frequency']
+    alerts = request.form['alerts']
 
     # [END submitted]
     # [START render_template]
@@ -191,7 +192,8 @@ def submitted_form():
         name=name,
         email=email,
         camp=camp,
-        frequency=frequency)
+        frequency=frequency,
+        alerts = alerts)
     # [END render_template]
 
 @app.errorhandler(500)
