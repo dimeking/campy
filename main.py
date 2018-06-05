@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # [START app]
+# [START imports]
 import logging
 import os
 import json
@@ -20,8 +21,9 @@ import json
 import flask
 from flask import request, render_template
 
-# [START imports]
 from datetime import datetime, timedelta, date
+
+# from models import model
 
 from google.appengine.api import app_identity
 from google.appengine.api import mail
@@ -130,19 +132,15 @@ def dayofweek(day):
     daysofweek = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
     return daysofweek[day] if day in daysofweek else 5 # Sat
 
-@app.route('/')
-def index():
+def generate_tracked_info(day):
 
-    day = request.args.get('dayofweek') if 'dayofweek' in request.args else None
-    days = request.args.get('days') if 'days' in request.args else None
-    
     parks = PARKS
     # search for saturdays for 6 months
     search_dates = getSearchDates(dayofweek(day), 26)
 
     # search in all parks
     for park in parks:
-        park['available dates'] = []
+        park['available_dates'] = []
         # park['search dates'] = search_dates
         print "park name: ", park['name']
         
@@ -162,10 +160,20 @@ def index():
 
             if search_date in available_dates:
                 print "Eureka: ", search_date
-                park["available dates"].append({'date': search_date, 'url': url})
+                park["available_dates"].append({'date': search_date, 'url': url})
                 # send_approved_mail('{}@appspot.gserviceaccount.com'.format(
                 #     app_identity.get_application_id()), park['name'], url, search_date)
 
+
+    return parks
+
+@app.route('/')
+def index():
+
+    day = request.args.get('dayofweek') if 'dayofweek' in request.args else None
+    days = request.args.get('days') if 'days' in request.args else None
+    
+    parks = generate_tracked_info(day)
 
     return flask.jsonify(parks)
 
@@ -185,15 +193,18 @@ def submitted_form():
     frequency = request.form['frequency']
     alerts = request.form['alerts']
 
+    # model.store_user_info(email, {'name' : name}, {'frequency': frequency, 'alerts': alerts})
+    # model.store_tracker_item(email, camp)
+
+    parks = generate_tracked_info(None)
+    
+
     # [END submitted]
     # [START render_template]
     return render_template(
         'submitted_form.html',
         name=name,
-        email=email,
-        camp=camp,
-        frequency=frequency,
-        alerts = alerts)
+        parks=parks)
     # [END render_template]
 
 @app.errorhandler(500)
