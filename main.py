@@ -22,8 +22,9 @@ import flask
 from flask import request, render_template
 
 from datetime import datetime, timedelta, date
+from urlparse import parse_qs, urlparse
 
-# from models import model
+import campy_models as models
 
 from google.appengine.api import app_identity
 from google.appengine.api import mail
@@ -50,7 +51,7 @@ PARKS = [
     {'id':'73984', 'name':'Pinnacles NP'}, 
      ]
 SITE_URL = 'https://www.recreation.gov'
-CODE_PARAM = '&contractCode=NRSO'
+CODE_PARAM = 'contractCode=NRSO'
 
 def getNextDate(dayofweek):
     # next fri/sat while (Mon-Sun: 0-6)
@@ -71,7 +72,7 @@ def getSearchDates(dayofweek, weeks):
 
 def getCalendarURL(parkid, date):
     ACTION_URL = '/campsiteCalendar.do?'
-    VIEW_PARAMS = 'page=calendar' + CODE_PARAM
+    VIEW_PARAMS = 'page=calendar' + '&' + CODE_PARAM
 
     url = SITE_URL + ACTION_URL + VIEW_PARAMS
     url = url + '&parkId=' + parkid
@@ -79,7 +80,29 @@ def getCalendarURL(parkid, date):
 
     return url
 
-def search(response_text):
+def getCampgroundURL(parkid):
+    ACTION_URL = '/campgroundDetails.do?'
+    VIEW_PARAMS = CODE_PARAM
+
+    url = SITE_URL + ACTION_URL + VIEW_PARAMS
+    url = url + '&parkId=' + parkid
+
+    return url
+
+def search_park_name(response_text):
+
+    name_str = "<span id='cgroundName'"
+    idx = response_text.find(name_str, 0)
+    if idx < 0:
+        return
+    idx = response_text.find('>', idx)
+
+    edx = response_text.find('</span>', idx)
+    name = response_text[idx+1:edx-1]
+    return name
+    
+
+def search_available_dates(response_text):
     available_dates = []
     idx = 0
     while True:
@@ -132,13 +155,29 @@ def dayofweek(day):
     daysofweek = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
     return daysofweek[day] if day in daysofweek else 5 # Sat
 
-def generate_tracked_info(day):
+def get_park_details(tracker_url):
+    params = parse_qs(urlparse(tracker_url).query)
+    if 'parkId' not in params:
+        return
+    parkid = params['parkId'][0]
 
-    parks = PARKS
+    # [START requests_get]
+    url = getCampgroundURL(parkid)
+    response = requests.get(url)
+    response.raise_for_status()
+    # [END requests_get]
+
+    name = search_park_name(response.text)    
+
+    return { 'id': parkid, 'name': name, 'url': tracker_url }
+
+def generate_tracked_info(properties, day):
+
     # search for saturdays for 6 months
     search_dates = getSearchDates(dayofweek(day), 26)
 
     # search in all parks
+    parks = properties
     for park in parks:
         park['available_dates'] = []
         # park['search dates'] = search_dates
@@ -154,7 +193,7 @@ def generate_tracked_info(day):
             response.raise_for_status()
             # [END requests_get]
 
-            available_dates = search(response.text)
+            available_dates = search_available_dates(response.text)
             if not any(available_dates):
                 continue
 
@@ -173,9 +212,14 @@ def index():
     day = request.args.get('dayofweek') if 'dayofweek' in request.args else None
     days = request.args.get('days') if 'days' in request.args else None
     
-    parks = generate_tracked_info(day)
+    tracked_info = generate_tracked_info(PARKS, day)
 
-    return flask.jsonify(parks)
+    # [START render_template]
+    return render_template(
+        'submitted_form.html',
+        username='Every One',
+        parks=tracked_info)
+    # [END render_template]
 
 # [START form]
 @app.route('/form')
@@ -187,24 +231,28 @@ def form():
 # [START submitted]
 @app.route('/submitted', methods=['POST'])
 def submitted_form():
-    name = request.form['name']
+    username = request.form['name']
     email = request.form['email']
-    camp = request.form['camp_url']
+    tracker_url = request.form['tracker_url']
     frequency = request.form['frequency']
     alerts = request.form['alerts']
 
-    # model.store_user_info(email, {'name' : name}, {'frequency': frequency, 'alerts': alerts})
-    # model.store_tracker_item(email, camp)
+    models.store_user_info(email, {"name" : username}, {"frequency": frequency, "alerts": alerts})
+    park_details = get_park_details(tracker_url)
+    models.store_tracker_item(email, park_details)
 
-    parks = generate_tracked_info(None)
-    
+    trackers = models.get_tracker_list(email) 
+    parks = trackers if any(trackers) else PARKS   
+    print "parks or trackers: ", parks    
+    tracked_info = generate_tracked_info(parks, None)
+    models.store_tracked_info(email, tracked_info)
 
     # [END submitted]
     # [START render_template]
     return render_template(
         'submitted_form.html',
-        name=name,
-        parks=parks)
+        username=username,
+        parks=tracked_info)
     # [END render_template]
 
 @app.errorhandler(500)
