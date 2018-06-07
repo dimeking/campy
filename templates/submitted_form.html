@@ -12,22 +12,28 @@
      <div id="main">
        <h4>Hi {{username}}!</h4>
        <a href="/form">Track another Campground? </a><br/>
-       <p>Campgrounds with availability on Saturdays for the next 6 months:</p>
+       <p>Available Campgrounds over the next 6 months:</p>
 
         <table style="width:100%">
           <tr>
-            <th>Park Name</th>
-            <th>Available Dates</th> 
+            <th>Campground Name</th>
+            <th>Fri</th> 
+            <th>Sat</th> 
           </tr>
-          {% for park in parks %}
+          {% for property in properties %}
           <tr>
-            <td><a href={{park.url}}>{{ park.name }}</a></td>
+            <td><a href={{property.url}}>{{ property.name }}</a></td>
             <td>
-              {% for available_date in park.available_dates %}
+              {% for available_date in property.available_dates.Fri %}
                 <a href={{available_date.url}}>{{available_date.date}}</a><br/>
               {% endfor %}
             </td> 
-          </tr>
+            <td>
+                {% for available_date in property.available_dates.Sat %}
+                  <a href={{available_date.url}}>{{available_date.date}}</a><br/>
+                {% endfor %}
+              </td> 
+            </tr>
           {% endfor %}
         </table>
       </div>

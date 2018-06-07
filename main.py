@@ -60,37 +60,37 @@ def getSearchDates(dayofweek, weeks):
     return search_dates
 
 
-def getCalendarURL(parkid, date):
+def getCalendarURL(id, date):
     ACTION_URL = '/campsiteCalendar.do?'
     VIEW_PARAMS = 'page=calendar' + '&' + CODE_PARAM
 
     url = SITE_URL + ACTION_URL + VIEW_PARAMS
-    url = url + '&parkId=' + parkid
+    url = url + '&parkId=' + id
     url = url + '&calarvdate=' + date
 
     return url
 
-def getCampgroundURL(parkid):
+def getPropertyURL(id):
     ACTION_URL = '/campgroundDetails.do?'
     VIEW_PARAMS = CODE_PARAM
 
     url = SITE_URL + ACTION_URL + VIEW_PARAMS
-    url = url + '&parkId=' + parkid
+    url = url + '&parkId=' + id
 
     return url
 
-PARKS = [
-    {'id':'72393', 'name':'Point Reyes NSS', 'url':getCampgroundURL('72393')}, 
-    {'id':'70926', 'name':'TUOLUMNE MEADOWS, Yosemite NP', 'url':getCampgroundURL('70926')}, 
-    {'id':'70925', 'name':'UPPER PINES, Yosemite NP', 'url':getCampgroundURL('70925')}, 
-    {'id':'70928', 'name':'LOWER PINES, Yosemite NP', 'url':getCampgroundURL('70928')}, 
-    {'id':'70927', 'name':'NORTH PINES, Yosemite NP', 'url':getCampgroundURL('70927')}, 
-    {'id':'71531', 'name':'FALLEN LEAF, Lake Tahoe', 'url':getCampgroundURL('71531')}, 
-    {'id':'70980', 'name':'Scorpion, Channel Islands NP', 'url':getCampgroundURL('70980')},
-    {'id':'73984', 'name':'Pinnacles NP', 'url':getCampgroundURL('73984')}, 
+TOP_PROPERTIES = [
+    {'id':'72393', 'name':'Point Reyes NSS', 'url':getPropertyURL('72393')}, 
+    {'id':'70926', 'name':'TUOLUMNE MEADOWS, Yosemite NP', 'url':getPropertyURL('70926')}, 
+    {'id':'70925', 'name':'UPPER PINES, Yosemite NP', 'url':getPropertyURL('70925')}, 
+    {'id':'70928', 'name':'LOWER PINES, Yosemite NP', 'url':getPropertyURL('70928')}, 
+    {'id':'70927', 'name':'NORTH PINES, Yosemite NP', 'url':getPropertyURL('70927')}, 
+    {'id':'71531', 'name':'FALLEN LEAF, Lake Tahoe', 'url':getPropertyURL('71531')}, 
+    {'id':'70980', 'name':'Scorpion, Channel Islands NP', 'url':getPropertyURL('70980')},
+    {'id':'73984', 'name':'Pinnacles NP', 'url':getPropertyURL('73984')}, 
      ]
 
-def search_park_name(response_text):
+def search_property_name(response_text):
 
     name_str = "<span id='cgroundName'"
     idx = response_text.find(name_str, 0)
@@ -154,40 +154,45 @@ The Campy Team
 
 def dayofweek(day):
     daysofweek = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
-    return daysofweek[day] if day in daysofweek else 5 # Sat
+    day = 'Sat' if day not in daysofweek else day
+    return daysofweek[day], day
 
-def get_park_details(tracker_url):
+def get_property_details(tracker_url):
     params = parse_qs(urlparse(tracker_url).query)
     if 'parkId' not in params:
         return
-    parkid = params['parkId'][0]
+    id = params['parkId'][0]
 
     # [START requests_get]
-    url = getCampgroundURL(parkid)
+    url = getPropertyURL(id)
     response = requests.get(url)
     response.raise_for_status()
     # [END requests_get]
 
-    name = search_park_name(response.text)    
+    name = search_property_name(response.text)    
 
-    return { 'id': parkid, 'name': name, 'url': tracker_url }
+    return { 'id': id, 'name': name, 'url': tracker_url }
 
 def generate_tracked_info(properties, day):
 
     # search for saturdays for 6 months
-    search_dates = getSearchDates(dayofweek(day), 26)
+    dow, day = dayofweek(day)
+    search_dates = getSearchDates(dow, 26)
 
-    # search in all parks
-    parks = properties
-    for park in parks:
-        park['available_dates'] = []
-        # park['search dates'] = search_dates
-        print "park name: ", park['name']
+    # search in all properties
+    tracked_info = properties
+    # tracked_info['timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # tracked_info['dayofweek'] = dayofweek(day)
+    for prop in properties:
+        prop['available_dates'] = {} if 'available_dates' not in prop else prop['available_dates']
+        prop['available_dates'][day] = []
+        # prop['search dates'] = search_dates
+        print "property name: ", prop['name']
         
         for search_date in search_dates:
             # print "search date: ", search_date
 
-            url = getCalendarURL(park['id'], search_date)
+            url = getCalendarURL(prop['id'], search_date)
     
             # [START requests_get]
             response = requests.get(url)
@@ -199,27 +204,29 @@ def generate_tracked_info(properties, day):
                 continue
 
             if search_date in available_dates:
-                print "Eureka: ", search_date
-                park["available_dates"].append({'date': search_date, 'url': url})
+                # print "Eureka: ", search_date
+                prop['available_dates'][day].append({'date': search_date, 'url': url})
                 # send_approved_mail('{}@appspot.gserviceaccount.com'.format(
-                #     app_identity.get_application_id()), park['name'], url, search_date)
+                #     app_identity.get_application_id()), prop['name'], url, search_date)
 
 
-    return parks
+    return tracked_info
 
 @app.route('/')
 def index():
 
     day = request.args.get('dayofweek') if 'dayofweek' in request.args else None
     days = request.args.get('days') if 'days' in request.args else None
+    useremail = request.args.get('useremail') if 'useremail' in request.args else None
     
-    tracked_info = generate_tracked_info(PARKS, day)
+    tracked_info = generate_tracked_info(TOP_PROPERTIES, 'Fri')
+    tracked_info = generate_tracked_info(tracked_info, 'Sat')
 
     # [START render_template]
     return render_template(
         'submitted_form.html',
         username='Every One',
-        parks=tracked_info)
+        properties=tracked_info)
     # [END render_template]
 
 # [START form]
@@ -239,21 +246,22 @@ def submitted_form():
     alerts = request.form['alerts']
 
     models.store_user_info(email, {"name" : username}, {"frequency": frequency, "alerts": alerts})
-    park_details = get_park_details(tracker_url)
-    models.store_tracker_item(email, park_details)
+    property_details = get_property_details(tracker_url)
+    models.store_tracker_item(email, property_details)
 
     trackers = models.get_tracker_list(email) 
-    parks = trackers if any(trackers) else PARKS   
-    print "parks or trackers: ", parks    
-    tracked_info = generate_tracked_info(parks, None)
-    models.store_tracked_info(email, tracked_info)
+    properties = trackers if any(trackers) else TOP_PROPERTIES   
+    print "properties or trackers: ", properties    
+    tracked_info = generate_tracked_info(properties, 'Fri')
+    tracked_info = generate_tracked_info(tracked_info, 'Sat')
+    # models.store_tracked_info(email, tracked_info)
 
     # [END submitted]
     # [START render_template]
     return render_template(
         'submitted_form.html',
         username=username,
-        parks=tracked_info)
+        properties=tracked_info)
     # [END render_template]
 
 @app.errorhandler(500)
