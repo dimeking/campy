@@ -8,9 +8,10 @@
      <div class="pagetitle">
       <h1>Campy</h1>
       <h3>Campground Alerts</h3>
-   </div>
+    </div>
      <div id="main">
        <h4>Hi {{username}}!</h4>
+       <a href="/form">Track another Campground? </a><br/>
        <p>Campgrounds with availability on Saturdays for the next 6 months:</p>
 
         <table style="width:100%">
@@ -20,7 +21,7 @@
           </tr>
           {% for park in parks %}
           <tr>
-            <td>{{ park.name }}</td>
+            <td><a href={{park.url}}>{{ park.name }}</a></td>
             <td>
               {% for available_date in park.available_dates %}
                 <a href={{available_date.url}}>{{available_date.date}}</a><br/>

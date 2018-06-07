@@ -40,16 +40,6 @@ if 'MONKEY_PATCH' in os.environ:
 
 app = flask.Flask(__name__)
 
-PARKS = [
-    {'id':'72393', 'name':'Point Reyes NSS'}, 
-    {'id':'70926', 'name':'TUOLUMNE MEADOWS, Yosemite NP'}, 
-    {'id':'70925', 'name':'UPPER PINES, Yosemite NP'}, 
-    {'id':'70928', 'name':'LOWER PINES, Yosemite NP'}, 
-    {'id':'70927', 'name':'NORTH PINES, Yosemite NP'}, 
-    {'id':'71531', 'name':'FALLEN LEAF, Lake Tahoe'}, 
-    {'id':'70980', 'name':'Scorpion, Santa Cruz Island, Channel Islands NP'},
-    {'id':'73984', 'name':'Pinnacles NP'}, 
-     ]
 SITE_URL = 'https://www.recreation.gov'
 CODE_PARAM = 'contractCode=NRSO'
 
@@ -88,6 +78,17 @@ def getCampgroundURL(parkid):
     url = url + '&parkId=' + parkid
 
     return url
+
+PARKS = [
+    {'id':'72393', 'name':'Point Reyes NSS', 'url':getCampgroundURL('72393')}, 
+    {'id':'70926', 'name':'TUOLUMNE MEADOWS, Yosemite NP', 'url':getCampgroundURL('70926')}, 
+    {'id':'70925', 'name':'UPPER PINES, Yosemite NP', 'url':getCampgroundURL('70925')}, 
+    {'id':'70928', 'name':'LOWER PINES, Yosemite NP', 'url':getCampgroundURL('70928')}, 
+    {'id':'70927', 'name':'NORTH PINES, Yosemite NP', 'url':getCampgroundURL('70927')}, 
+    {'id':'71531', 'name':'FALLEN LEAF, Lake Tahoe', 'url':getCampgroundURL('71531')}, 
+    {'id':'70980', 'name':'Scorpion, Channel Islands NP', 'url':getCampgroundURL('70980')},
+    {'id':'73984', 'name':'Pinnacles NP', 'url':getCampgroundURL('73984')}, 
+     ]
 
 def search_park_name(response_text):
 
