@@ -99,7 +99,7 @@ def search_property_name(response_text):
     idx = response_text.find('>', idx)
 
     edx = response_text.find('</span>', idx)
-    name = response_text[idx+1:edx-1]
+    name = response_text[idx+1:edx]
     return name
     
 
@@ -219,6 +219,9 @@ def index():
     days = request.args.get('days') if 'days' in request.args else None
     useremail = request.args.get('useremail') if 'useremail' in request.args else None
     
+    trackers = models.get_tracker_list(useremail) if useremail else []
+    properties = trackers if any(trackers) else TOP_PROPERTIES   
+    print "properties or trackers: ", properties    
     tracked_info = generate_tracked_info(TOP_PROPERTIES, 'Fri')
     tracked_info = generate_tracked_info(tracked_info, 'Sat')
 
