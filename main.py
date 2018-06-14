@@ -40,8 +40,9 @@ if 'MONKEY_PATCH' in os.environ:
 
 app = flask.Flask(__name__)
 
-SITE_URL = 'https://www.recreation.gov'
-CODE_PARAM = 'contractCode=NRSO'
+REC_SITE_URL = 'https://www.recreation.gov'
+RA_SITE_URL = 'https://www.reserveamerica.com'
+CODE_PARAM = 'contractCode='
 
 def getNextDate(dayofweek):
     # next fri/sat while (Mon-Sun: 0-6)
@@ -59,12 +60,19 @@ def getSearchDates(dayofweek, weeks):
         
     return search_dates
 
+def getSiteURL(id):
+    return REC_SITE_URL if int(id)<100000 else RA_SITE_URL
+
+def getCodeParam(id):
+    code = {0: 'NRSO', 1: 'EB', 10: 'PRCG'}
+    idx = int(id)/100000
+    return CODE_PARAM+code[idx]
 
 def getCalendarURL(id, date):
     ACTION_URL = '/campsiteCalendar.do?'
-    VIEW_PARAMS = 'page=calendar' + '&' + CODE_PARAM
+    VIEW_PARAMS = 'page=calendar' + '&' + getCodeParam(id)
 
-    url = SITE_URL + ACTION_URL + VIEW_PARAMS
+    url = getSiteURL(id) + ACTION_URL + VIEW_PARAMS
     url = url + '&parkId=' + id
     url = url + '&calarvdate=' + date
 
@@ -72,9 +80,9 @@ def getCalendarURL(id, date):
 
 def getPropertyURL(id):
     ACTION_URL = '/campgroundDetails.do?'
-    VIEW_PARAMS = CODE_PARAM
+    VIEW_PARAMS = getCodeParam(id)
 
-    url = SITE_URL + ACTION_URL + VIEW_PARAMS
+    url = getSiteURL(id) + ACTION_URL + VIEW_PARAMS
     url = url + '&parkId=' + id
 
     return url
@@ -88,6 +96,13 @@ TOP_PROPERTIES = [
     {'id':'71531', 'name':'FALLEN LEAF, Lake Tahoe', 'url':getPropertyURL('71531')}, 
     {'id':'70980', 'name':'Scorpion, Channel Islands NP', 'url':getPropertyURL('70980')},
     {'id':'73984', 'name':'Pinnacles NP', 'url':getPropertyURL('73984')}, 
+    {'id':'110457', 'name':'Point Pinole NP', 'url':getPropertyURL('110457')}, 
+    {'id':'110453', 'name':'Coyote Hills RP', 'url':getPropertyURL('110453')}, 
+    {'id':'110003', 'name':'Del Valle RP', 'url':getPropertyURL('110003')}, 
+    {'id':'110028', 'name':'Sunol RP', 'url':getPropertyURL('110028')}, 
+    {'id':'110452', 'name':'Black Diamond RP', 'url':getPropertyURL('110452')}, 
+    {'id':'1060800', 'name':'Clear Lake Campground', 'url':getPropertyURL('1060800')}, 
+    {'id':'1061750', 'name':'CAMPGROUND BY THE LAKE, South Lake Tahoe', 'url':getPropertyURL('1061750')}, 
      ]
 
 def search_property_name(response_text):
@@ -182,7 +197,6 @@ def generate_tracked_info(properties, day):
     # search in all properties
     tracked_info = properties
     # tracked_info['timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    # tracked_info['dayofweek'] = dayofweek(day)
     for prop in properties:
         prop['available_dates'] = {} if 'available_dates' not in prop else prop['available_dates']
         prop['available_dates'][day] = []
@@ -212,6 +226,23 @@ def generate_tracked_info(properties, day):
 
     return tracked_info
 
+def get_date(date_str):
+    m, d, y = date_str.split('/')
+    dt = date(int(y),int(m),int(d))
+    return dt
+
+def resolve_tracked_info(tracked_info):
+    fri_dates = [get_date(dt['date']).toordinal() for dt in tracked_info['available_dates']['Fri']]
+    sat_dates = [get_date(dt['date']).toordinal() for dt in tracked_info['available_dates']['Sat']]
+
+    # pick Fridays where Sat is available
+    f_dates = [date.fromordinal(dt).strftime('%m/%d/%Y') for dt in fri_dates if dt+1 in sat_dates]
+    fr_dates = [dt for dt in tracked_info['available_dates']['Fri'] if dt['date'] not in f_dates]
+    tracked_info['available_dates']['Fri'] = fr_dates
+
+    return tracked_info
+
+
 @app.route('/')
 def index():
 
@@ -224,6 +255,7 @@ def index():
     print "properties or trackers: ", properties    
     tracked_info = generate_tracked_info(TOP_PROPERTIES, 'Fri')
     tracked_info = generate_tracked_info(tracked_info, 'Sat')
+    # tracked_info = resolve_tracked_info(tracked_info)
 
     # [START render_template]
     return render_template(
@@ -257,6 +289,8 @@ def submitted_form():
     print "properties or trackers: ", properties    
     tracked_info = generate_tracked_info(properties, 'Fri')
     tracked_info = generate_tracked_info(tracked_info, 'Sat')
+    # tracked_info = resolve_tracked_info(tracked_info)
+    
     # models.store_tracked_info(email, tracked_info)
 
     # [END submitted]
