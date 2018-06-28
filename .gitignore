@@ -1,4 +1,6 @@
 lib
 env
+venv
+.DS_Store
 *.pyc
 .vscode

@@ -24,18 +24,19 @@
           <tr>
             <td><a href={{property.url}}>{{ property.name }}</a></td>
             <td>
-              {% for available_date in property.available_dates.Fri %}
+              {% for available_date in property.available_dates.Fri.dates %}
                 <a href={{available_date.url}}>{{available_date.date}}</a><br/>
               {% endfor %}
             </td> 
             <td>
-                {% for available_date in property.available_dates.Sat %}
+                {% for available_date in property.available_dates.Sat.dates %}
                   <a href={{available_date.url}}>{{available_date.date}}</a><br/>
                 {% endfor %}
               </td> 
             </tr>
           {% endfor %}
-        </table>
+        </table><br/>
+        <a href="/refresh?show=True">Refresh? </a><br/>
       </div>
      </div>
    </div>
