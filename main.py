@@ -17,6 +17,7 @@
 import logging
 import os
 import json
+import thread
 
 import flask
 from flask import request, render_template
@@ -97,10 +98,10 @@ TOP_PROPERTIES = [
     {'id':'70980', 'name':'SANTA CRUZ SCORPION, CA', 'url':getPropertyURL('70980')},
     {'id':'73984', 'name':'PINNACLES CAMPGROUND, CA', 'url':getPropertyURL('73984')}, 
     {'id':'110457', 'name':'Point Pinole Regional Shoreline, CA', 'url':getPropertyURL('110457')}, 
-    {'id':'110453', 'name':'Coyote Hills Regional Park, CA', 'url':getPropertyURL('110453')}, 
+    # {'id':'110453', 'name':'Coyote Hills Regional Park, CA', 'url':getPropertyURL('110453')}, 
     {'id':'110003', 'name':'Del Valle, CA', 'url':getPropertyURL('110003')}, 
     {'id':'110028', 'name':'Sunol, CA', 'url':getPropertyURL('110028')}, 
-    {'id':'110452', 'name':'Black Diamond Mines Regional Preserve, CA', 'url':getPropertyURL('110452')}, 
+    # {'id':'110452', 'name':'Black Diamond Mines Regional Preserve, CA', 'url':getPropertyURL('110452')}, 
     {'id':'1060800', 'name':'Clear Lake Campground, CA', 'url':getPropertyURL('1060800')}, 
     {'id':'1061750', 'name':'CAMPGROUND BY THE LAKE, CA', 'url':getPropertyURL('1061750')}, 
      ]
@@ -283,7 +284,7 @@ def update_availability(useremail=None):
     for property_id in property_ids:
         prop = update_property_availability(property_id)
         properties.append(prop)
-
+    print "properties updated: ", properties  
     return properties
 
 @app.route('/start')
@@ -293,9 +294,15 @@ def start():
 
     for property_details in TOP_PROPERTIES:
         models.save_property_details(property_details['id'], property_details)
+    try:
+        thread.start_new_thread(update_availability, ())
+    except Exception:
+        logging.exception('Exception occured during start_new_thread.')
+        update_availability()
 
-    properties = update_availability()
-    return flask.jsonify(properties=properties)
+    return 'OK', 200
+    # properties = update_availability()
+    # return flask.jsonify(properties=properties)
 
 
 @app.route('/refresh')
@@ -306,9 +313,15 @@ def refresh():
 
     # refresh availability 
     # get all properties of user or top properties
-    properties = update_availability(useremail)
+    # properties = update_availability(useremail)
+    # return flask.jsonify(properties=properties)
+    try:
+        thread.start_new_thread(update_availability, ())
+    except Exception:
+        logging.exception('Exception occured during start_new_thread.')
+        update_availability()
 
-    return flask.jsonify(properties=properties)
+    return 'OK', 200
 
 @app.route('/')
 def index():
