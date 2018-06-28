@@ -252,7 +252,10 @@ def get_availability(useremail=None):
         prop = models.get_property_details(proprety_id)
         prop['available_dates'] = models.get_property_available_dates(proprety_id)
         if not prop['available_dates']:
+            prop['available_dates'] = {}
+        if 'Fri' not in prop['available_dates'] or not prop['available_dates']['Fri']:
             prop['available_dates']['Fri'] = {'timestamp':'', 'dates':[]}
+        if 'Sat' not in prop['available_dates'] or not prop['available_dates']['Sat']:
             prop['available_dates']['Sat'] = {'timestamp':'', 'dates':[]}
 
         properties.append(prop)
@@ -291,8 +294,8 @@ def start():
     for property_details in TOP_PROPERTIES:
         models.save_property_details(property_details['id'], property_details)
 
-    update_availability()
-    return flask.redirect(url_for('index')) if show=='True' else 'OK', 200
+    properties = update_availability()
+    return flask.jsonify(properties=properties)
 
 
 @app.route('/refresh')
@@ -303,9 +306,9 @@ def refresh():
 
     # refresh availability 
     # get all properties of user or top properties
-    update_availability(useremail)
+    properties = update_availability(useremail)
 
-    return flask.redirect(url_for('index')) if show=='True' else 'OK', 200
+    return flask.jsonify(properties=properties)
 
 @app.route('/')
 def index():
