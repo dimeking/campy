@@ -2,7 +2,6 @@ cron:
 - description: "Campy Hourly"
   url: /refresh
   schedule: every 60 minutes
-  target: beta
   retry_parameters:
     min_backoff_seconds: 60
     max_doublings: 3
