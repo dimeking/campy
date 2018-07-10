@@ -1,7 +1,7 @@
 cron:
 - description: "Campy Refresh"
   url: /refreshnext
-  schedule: every 4 minutes
+  schedule: every 2 minutes
   retry_parameters:
     min_backoff_seconds: 60
     max_doublings: 3
