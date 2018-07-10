@@ -22,6 +22,7 @@ import thread
 import flask
 from flask import request, render_template
 
+import dateutil.parser
 from datetime import datetime, timedelta, date
 from urlparse import parse_qs, urlparse
 
@@ -287,6 +288,22 @@ def update_availability(useremail=None):
     print "properties updated: ", properties  
     return properties
 
+def update_availability_next_property(useremail=None):
+    properties = get_availability(useremail)
+    property_id = ''
+    for prop in properties:
+        ts = prop['available_dates']['Fri']['timestamp']
+        last_checked_time = dateutil.parser.parse(ts) if any(ts) else datetime.min 
+        td = datetime.utcnow() - last_checked_time.replace(tzinfo=None)
+        if td.total_seconds() > 3600:
+            property_id = prop['id']
+            break
+
+    pr = update_property_availability(property_id) if any(property_id) else {}
+    print "property updated: ", pr  
+    return pr
+
+
 @app.route('/start')
 def start():
     print "start: "
@@ -322,6 +339,20 @@ def refresh():
         update_availability()
 
     return 'OK', 200
+
+@app.route('/refreshnext')
+def refreshnext():
+    print "refreshnext: "
+    useremail = request.args.get('useremail') if 'useremail' in request.args else None
+    show = request.args.get('show') if 'show' in request.args else None
+
+    # refresh availability 
+    # get all properties of user or top properties
+    # properties = update_availability(useremail)
+    # return flask.jsonify(properties=properties)
+    prop = update_availability_next_property(useremail)
+
+    return flask.jsonify(property=prop)
 
 @app.route('/')
 def index():
