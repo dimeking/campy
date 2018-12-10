@@ -6,16 +6,15 @@
  <body>
    <div id="container">
      <div class="pagetitle">
-      <h1>Campy</h1>
-      <h3>Campground Alerts</h3>
+      <h1><b>Campy</b></h1>
+      <h3>Your Place for Campground Alerts</h3>
     </div>
      <div id="main">
-       <h4>Hi {{username}}!</h4>
-       <a href="/form">Track another Campground? </a><br/>
+       <br>
        <p>Available Campgrounds over the next 6 months:</p>
 
         <table style="width:100%">
-          <tr>
+          <tbody><tr>
             <th>Campground Name</th>
             <th>Fri</th> 
             <th>Sat</th> 
@@ -35,9 +34,12 @@
               </td> 
             </tr>
           {% endfor %}
-        </table><br/>
-        <a href="/refresh?show=True">Refresh? </a><br/>
-      </div>
+        </tbody></table><br/>
+        <span>
+          <div class="footer-text">
+            <a href="https://campy-205806.appspot.com/form"><i>Want to track another Campground?</i></a><br>
+            <a href="https://campy-205806.appspot.com/refresh?show=True"><i>Refresh?</i></a><br>
+          </div></span>
      </div>
    </div>
  </body>
